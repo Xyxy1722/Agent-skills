@@ -124,7 +124,7 @@ Refer to `references/research_methodology.md` for detailed guidance, but the cor
    Document:
    ```
    Build Tool: Vite 5.x
-   Path Aliases: '@/' ¡ú 'src/', '@components/' ¡ú 'src/components/'
+   Path Aliases: '@/' ï¿½ï¿½ 'src/', '@components/' ï¿½ï¿½ 'src/components/'
    TypeScript: Strict mode enabled
    ```
 
