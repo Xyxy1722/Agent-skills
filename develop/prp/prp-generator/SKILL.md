@@ -1,6 +1,7 @@
 ---
 name: prp-generator
-description: Generate comprehensive Product Requirement Plans (PRPs) for feature implementation with thorough codebase analysis and external research. Use when the user requests a PRP, PRD, or detailed implementation plan for a new feature. Conducts systematic research, identifies patterns, and creates executable validation gates for one-pass implementation success.
+description: Generate comprehensive Product Requirement Plans (PRPs) for feature implementation with thorough codebase analysis and external research and providing structured templates and comprehensive implementation guidance. Use when the user requests a PRP, PRD, or detailed implementation plan for a new feature. Conducts systematic research and identifies patterns.
+allowed-tools: Write, Edit
 context: fork
 agent: Plan
 ---
@@ -14,11 +15,12 @@ This skill generates comprehensive Product Requirement Plans (PRPs) that enable 
 ## When to Use This Skill
 
 Invoke this skill when:
-- User requests a PRP or PRD (Product Requirement Plan/Document)
-- User wants a detailed implementation plan for a new feature
-- User asks to "plan out" or "design" a complex feature
-- Beginning a significant feature development that would benefit from structured planning
-- User provides a feature description file and asks for implementation guidance
+- User requests a PRP (Product Requirement Plan)
+- Create implementation guidance from architectural design
+- Structure design information for implementation phase
+- Define implementation plans with step-by-step guidance
+- Specify testing strategies and success criteria
+- Document architecture, libraries, and dependencies for implementers
 
 ## Core Principle
 
@@ -28,7 +30,7 @@ Invoke this skill when:
 3. Access to the codebase
 4. WebSearch capabilities
 
-Therefore, your PRP must be self-contained with all necessary context, specific references, and executable validation gates.
+Therefore, your PRP must be self-contained with all necessary context and specific references.
 
 ## Workflow
 
@@ -122,7 +124,7 @@ Refer to `references/research_methodology.md` for detailed guidance, but the cor
    Document:
    ```
    Build Tool: Vite 5.x
-   Path Aliases: '@/' → 'src/', '@components/' → 'src/components/'
+   Path Aliases: '@/' �� 'src/', '@components/' �� 'src/components/'
    TypeScript: Strict mode enabled
    ```
 
@@ -219,7 +221,6 @@ This is the most important phase. Spend significant time analyzing:
    - Are all integration points documented?
    - Are all necessary examples included?
    - Are gotchas and warnings clearly stated?
-   - Are validation gates executable?
    - Is the implementation path clear and logical?
 
 5. **Quality Assessment**
@@ -232,13 +233,13 @@ This is the most important phase. Spend significant time analyzing:
 
 Use the template from `assets/prp_template.md` as the base structure, and populate it with:
 
-1. **Metadata Section**
+1. **Metadata**
    - Feature name
    - Timeline estimate
    - Confidence score (1-10)
    - Creation date
 
-2. **Executive Summary**
+2. **Summary**
    - 2-3 sentences describing the feature
    - Core value proposition
 
@@ -266,23 +267,7 @@ Use the template from `assets/prp_template.md` as the base structure, and popula
    - Integration test approach
    - Manual testing checklist
 
-7. **Validation Gates**
-   Must be EXECUTABLE commands:
-   ```bash
-   # Type checking
-   npm run type-check
-
-   # Linting
-   npm run lint
-
-   # Tests
-   npm run test
-
-   # Build
-   npm run build
-   ```
-
-8. **Success Criteria**
+7. **Success Criteria**
    - Clear, measurable completion criteria
    - Checklist format
 
@@ -334,7 +319,6 @@ Before delivering the PRP, verify:
 - [ ] Coding conventions documented
 - [ ] Test patterns identified
 - [ ] Implementation steps clearly defined
-- [ ] Validation gates are executable (not pseudo-code)
 - [ ] Error handling strategy documented
 - [ ] Edge cases identified
 - [ ] Success criteria defined
@@ -346,28 +330,25 @@ Before delivering the PRP, verify:
 ## Common Pitfalls to Avoid
 
 1. **Vague References**
-   - ❌ "There's a similar component somewhere"
-   - ✅ "See UserProfile at src/components/UserProfile.tsx:45-67"
+   - ? "There's a similar component somewhere"
+   - ? "See UserProfile at src/components/UserProfile.tsx:45-67"
 
 2. **Missing Version Information**
-   - ❌ "Use React Query"
-   - ✅ "Use @tanstack/react-query v5.28.0"
+   - ? "Use React Query"
+   - ? "Use @tanstack/react-query v5.28.0"
 
-3. **Non-Executable Validation Gates**
-   - ❌ "Run tests and make sure they pass"
-   - ✅ "npm run test && npm run build"
 
-4. **Generic Best Practices**
-   - ❌ "Follow React best practices"
-   - ✅ "Use named exports (see src/components/Button.tsx:1)"
+3. **Generic Best Practices**
+   - ? "Follow React best practices"
+   - ? "Use named exports (see src/components/Button.tsx:1)"
 
-5. **Incomplete Research**
-   - ❌ Skipping codebase analysis
-   - ✅ Thoroughly document existing patterns
+4. **Incomplete Research**
+   - ? Skipping codebase analysis
+   - ? Thoroughly document existing patterns
 
-6. **Missing Gotchas**
-   - ❌ Assuming smooth implementation
-   - ✅ Document known issues and edge cases
+5. **Missing Gotchas**
+   - ? Assuming smooth implementation
+   - ? Document known issues and edge cases
 
 ## Example Usage
 
@@ -392,11 +373,19 @@ Before delivering the PRP, verify:
 ### References
 - `references/research_methodology.md` - Detailed research guidance and best practices
 
+### Examples
+
+- `assets/Update-ExecId-Tag17-Generating-Strategy.md` - Example simple feature PRP
+- `assets/Support-Multi-CIFIX-Instances-in-Watchdog.md` - Example complex feature PRP
+- `assets/CIFIX-v2-Overview.md` - Example multi-component PRP
+- `assets/Support-Customer-Level-Config-in-RDBMS.md` - Example database focused PRP
+
+These examples does not contain Codebase Analysis and External Research
+
 ## Notes
 
 - **Research is mandatory**: Never skip codebase or external research
 - **Be specific**: Always include file paths, line numbers, URLs, versions
 - **Think deeply**: Phase 4 (Ultra-Thinking) is critical for success
-- **Validate everything**: All validation gates must be executable
 - **Score honestly**: If confidence is below 7, improve the PRP
 - **Context is king**: The implementer only has what you put in the PRP
