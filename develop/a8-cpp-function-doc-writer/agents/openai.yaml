@@ -1,0 +1,4 @@
+interface:
+  display_name: "A8 C++ Function Doc Writer"
+  short_description: "Write A8 function-call docs from C++ code"
+  default_prompt: "Use $a8-cpp-function-doc-writer to analyze an A8 function number or entry function and draft the markdown documentation."
