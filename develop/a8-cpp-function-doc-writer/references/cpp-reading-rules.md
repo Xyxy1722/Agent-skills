@@ -77,8 +77,10 @@ Use these rules when the call chain depends on C++ language behavior rather than
   - different implementations under different macros
   - a declaration in one branch and a definition in another
   - entire code paths compiled out
+- Determine the active compile-time branch from repository `CMakeLists.txt` and included `.cmake` files first.
+- Describe only the active branch in the main procedure; inactive branches can be skipped unless the user asks.
 - Do not combine multiple compile-time branches into one single behavior description.
-- If the active compile-time branch is unknown, describe the alternatives and name the controlling macros.
+- If the active compile-time branch cannot be confirmed, stop and ask the user immediately before continuing the affected flow.
 
 ## 9. Missing local definitions may still exist elsewhere
 
@@ -94,7 +96,8 @@ Use these rules when the call chain depends on C++ language behavior rather than
 
 ## 9.5 Wrapper phases may hide the actual logic
 
-- When such a method immediately calls a utility manager, process manager, or tool object, continue tracing into that downstream method.
+- If a method mainly delegates to another object, treat it as a wrapper regardless of its name.
+- When such a method immediately calls a utility manager, process manager, helper, adapter, service object, or tool object, continue tracing into that downstream method.
 - Stop only after you reach the method that performs the real calculation, query, write, status update, or availability check.
 
 ## 10. Empty implementations matter

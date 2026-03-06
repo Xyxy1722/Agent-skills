@@ -36,14 +36,7 @@ def render_template(function_id: str, function_name: str) -> str:
 ## Procedure
 
 - {function_name} -> `TODO:path:line`
-
-## Key checks
-
-- TODO
-
-## Bottom-level methods
-
-- TODO
+  - TODO: next call -> `TODO:path:line` <leaf details should stay in Procedure>
 
 ## TODO
 

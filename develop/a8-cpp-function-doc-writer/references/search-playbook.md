@@ -115,7 +115,7 @@ When a target method or branch is inside conditional compilation:
 - inspect the surrounding `#if/#ifdef/#elif/#else/#endif` block
 - record the controlling macro names
 - avoid merging multiple compile-time branches into one runtime description
-- if the active build condition is unknown, say which alternative branches exist
+- if the active build condition is unknown from `CMakeLists.txt` and included `.cmake` files, stop and ask the user before continuing the affected flow
 
 ## 3. Find table access
 
@@ -123,7 +123,7 @@ Search for wrappers first, then one level deeper for the concrete table:
 
 ```bash
 rg -n "Query[A-Za-z]+\\(|InitCache[A-Za-z]+\\(|writetable_[A-Za-z_]+\\(" .
-rg -n "rtcm_|rtfa_|mem_" .
+rg -n "CREATE TABLE|table name|tablename|keys <<|Insert into|Update .* set|From [A-Za-z_][A-Za-z0-9_]*" .
 ```
 
 Common patterns in this codebase:
@@ -136,8 +136,9 @@ Common patterns in this codebase:
 
 When the wrapper name is generic, verify the actual table from:
 
-- concrete table structs such as `CRtfa_instruction`
-- serializers or send-table code that compares explicit table names
+- concrete table structs or record classes
+- key builders or serializers that emit explicit table names
+- SQL statements, schema bindings, manager classes, or send-table code that compares explicit table names
 
 ## 4. Find validation and amount logic
 
@@ -154,7 +155,7 @@ Pay special attention to:
 - market checks
 - price and quantity calculation
 - fund and holding availability checks
-- process-manager or utility-manager handoff methods that hide the real leaf logic
+- manager, adapter, helper, or utility handoff methods that hide the real leaf logic
 
 ## 5. Keep the main path readable
 
