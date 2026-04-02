@@ -1,10 +1,9 @@
 ---
-name: skill-install
-description: Install Codex skills into /home/fxy/github-Xyxy1722/Agent-skills by functional category, create symlinks in ~/.codex/skills, and commit each installed skill safely without staging unrelated changes.
-origin: ECC
+name: personal-skill-install
+description: Install Codex skills into /home/fxy/github-Xyxy1722/Agent-skills by functional category, create symlinks in ~/.codex/skills, and commit each installed skill safely without staging unrelated changes. Use when installing or registering personal skills from local folders into the Agent-skills repository.
 ---
 
-# Skill Install
+# Personal Skill Install
 
 Install and register Codex skills in a repeatable way.
 
@@ -24,6 +23,7 @@ Install and register Codex skills in a repeatable way.
 5. Create or refresh `~/.codex/skills/<skill-name>` as a symlink to the installed skill.
 6. Stage only the installed skill path.
 7. Commit with the exact message `install skill of <skill-name>`.
+8. Push the commit to `origin` unless the user says not to.
 
 ## Category Selection
 
