@@ -1,0 +1,4 @@
+interface:
+  display_name: "OMS DB Files"
+  short_description: "Transform and validate generated OMS DAO code"
+  default_prompt: "Use $oms-global-database-file to update generated oms-dao database files, fix comments and tests, and validate with Maven."
