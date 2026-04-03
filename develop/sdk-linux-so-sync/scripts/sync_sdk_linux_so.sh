@@ -44,6 +44,7 @@ Behavior:
   5. Recreate libxxx.so -> libxxx.so.<version>.
   6. Delete older libxxx.so.* payload files for the updated library in each target directory.
   7. Copy all files from the sibling reference x64 directory into each target sibling win64 directory.
+  8. Verify the final target sdk/linux and sdk/win64 contents match the release package.
 EOF
 }
 
@@ -137,6 +138,82 @@ is_ignored_lib() {
         fi
     done
     return 1
+}
+
+verify_linux_target() {
+    local target_dir="$1"
+    local failed=0
+    local lib ref_real ref_sha target_real target_sha
+
+    echo "Verifying Linux target: $target_dir"
+    for lib in "${logical_libs[@]}"; do
+        if is_ignored_lib "$lib"; then
+            continue
+        fi
+
+        ref_real="$(resolve_real_file "$REFERENCE_DIR/$lib")" || {
+            echo "[ERROR] Could not resolve reference entry during verify: $REFERENCE_DIR/$lib" >&2
+            return 1
+        }
+        ref_sha="$(sha256_of "$ref_real")"
+
+        if [[ ! -e "$target_dir/$lib" && ! -L "$target_dir/$lib" ]]; then
+            echo "[VERIFY][MISS] $target_dir : $lib" >&2
+            failed=1
+            continue
+        fi
+
+        target_real="$(resolve_real_file "$target_dir/$lib")" || {
+            echo "[VERIFY][ERR ] $target_dir : $lib resolve failed" >&2
+            failed=1
+            continue
+        }
+        target_sha="$(sha256_of "$target_real")"
+
+        if [[ "$ref_sha" == "$target_sha" ]]; then
+            printf '  [VERIFY][OK ] %-28s sha256=%s\n' "$lib" "$ref_sha"
+        else
+            printf '  [VERIFY][BAD] %-28s reference=%s target=%s\n' "$lib" "$ref_sha" "$target_sha" >&2
+            failed=1
+        fi
+    done
+
+    return "$failed"
+}
+
+verify_win64_target() {
+    local target_win64_dir="$1"
+    local failed=0
+    local rel ref_file target_file ref_sha target_sha
+
+    if [[ ! -d "$REFERENCE_WIN64_DIR" ]]; then
+        return 0
+    fi
+
+    echo "Verifying win64 target: $target_win64_dir"
+    while IFS= read -r rel; do
+        [[ -z "$rel" ]] && continue
+        ref_file="$REFERENCE_WIN64_DIR/$rel"
+        target_file="$target_win64_dir/$rel"
+
+        if [[ ! -f "$target_file" ]]; then
+            echo "[VERIFY][MISS] $target_win64_dir : $rel" >&2
+            failed=1
+            continue
+        fi
+
+        ref_sha="$(sha256_of "$ref_file")"
+        target_sha="$(sha256_of "$target_file")"
+
+        if [[ "$ref_sha" == "$target_sha" ]]; then
+            printf '  [VERIFY][OK ] %s\n' "$rel"
+        else
+            printf '  [VERIFY][BAD] %s reference=%s target=%s\n' "$rel" "$ref_sha" "$target_sha" >&2
+            failed=1
+        fi
+    done < <(cd "$REFERENCE_WIN64_DIR" && find . -type f | sort | sed 's#^\./##')
+
+    return "$failed"
 }
 
 logical_libs=()
@@ -269,5 +346,21 @@ else
 fi
 
 echo
-echo "SDK sync completed."
+echo "Verifying final sync"
+
+verify_failed=0
+for target_dir in "${TARGET_DIRS[@]}"; do
+    verify_linux_target "$target_dir" || verify_failed=1
+    target_sdk_dir="$(dirname "$target_dir")"
+    target_win64_dir="$target_sdk_dir/win64"
+    verify_win64_target "$target_win64_dir" || verify_failed=1
+done
+
+echo
+if [[ "$verify_failed" -ne 0 ]]; then
+    echo "SDK sync verification failed." >&2
+    exit 1
+fi
+
+echo "SDK sync completed and verified."
 exit 0
