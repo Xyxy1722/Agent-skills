@@ -1,11 +1,11 @@
 ---
 name: sdk-linux-so-sync
-description: Sync A8 Linux SDK shared libraries from a release sdk/linux directory into project sdk/linux directories by comparing SHA256, requiring an explicit version for every updated .so, recreating symlinks, and deleting old versioned payloads for the updated libraries. Use when updating cpp-demo/sdk/linux and cpp-unit-testing/sdk/linux from a delivered SDK package.
+description: Sync A8 SDK deliveries into project sdk directories. Compare shared libraries from a release sdk/linux directory into project sdk/linux directories by SHA256, require an explicit version for every updated .so, recreate symlinks, delete old versioned payloads for updated libraries, and copy the release sdk/x64 contents into each target sdk/win64 directory. Use when updating cpp-demo/sdk and cpp-unit-testing/sdk from a delivered SDK package.
 ---
 
 # SDK Linux SO Sync
 
-Use this skill when a new A8 SDK delivery updates files under `sdk/linux` and you need to sync the shared libraries into this repository.
+Use this skill when a new A8 SDK delivery updates files under `sdk/linux` and `sdk/x64` and you need to sync them into this repository.
 
 ## Workflow
 
@@ -14,7 +14,8 @@ Use this skill when a new A8 SDK delivery updates files under `sdk/linux` and yo
 3. Run `--check-only` first to confirm which logical `*.so` files changed.
 4. For every changed library, provide an explicit `--set-version libname.so=version`.
 5. Run the real update.
-6. Verify the logical symlink points to `libname.so.<version>` in each target directory.
+6. Verify the logical symlink points to `libname.so.<version>` in each target `sdk/linux` directory.
+7. Verify the release `sdk/x64` contents were copied into each target `sdk/win64` directory.
 
 ## Rules
 
@@ -24,6 +25,9 @@ Use this skill when a new A8 SDK delivery updates files under `sdk/linux` and yo
 - After updating a library in a target directory, delete older versioned payload files for that same library and keep only:
   - `libname.so`
   - `libname.so.<new-version>`
+- Derive the release Windows source directory as the sibling `x64/` directory next to the passed `sdk/linux` reference directory.
+- For every target `sdk/linux` directory, derive the Windows target as its sibling `sdk/win64` directory.
+- Copy all files from the release `sdk/x64` directory into each target `sdk/win64` directory, overwriting files with the same name.
 - Ignore these delivered-but-unused libraries unless the user explicitly asks otherwise:
   - `libhare_socket_efvi.so`
   - `libhare_socket_exanic.so`
@@ -56,3 +60,4 @@ scripts/sync_sdk_linux_so.sh \
 - Default targets are `cpp-demo/sdk/linux` and `cpp-unit-testing/sdk/linux` when they exist under the current working directory.
 - If a changed library is missing a `--set-version`, the script exits with an error instead of prompting.
 - If the release directory contains plain `.so` files instead of versioned symlinks, that is fine. The version still comes from the explicit `--set-version` values.
+- When `--reference` is `/path/to/sdk/linux`, the script will also use `/path/to/sdk/x64` as the Windows source directory when that directory exists.

@@ -43,6 +43,7 @@ Behavior:
   4. Copy the reference payload as libxxx.so.<version>.
   5. Recreate libxxx.so -> libxxx.so.<version>.
   6. Delete older libxxx.so.* payload files for the updated library in each target directory.
+  7. Copy all files from the sibling reference x64 directory into each target sibling win64 directory.
 EOF
 }
 
@@ -104,6 +105,9 @@ if [[ ! -d "$REFERENCE_DIR" ]]; then
     exit 1
 fi
 
+REFERENCE_SDK_DIR="$(dirname "$REFERENCE_DIR")"
+REFERENCE_WIN64_DIR="$REFERENCE_SDK_DIR/x64"
+
 for dir in "${TARGET_DIRS[@]}"; do
     if [[ ! -d "$dir" ]]; then
         echo "Target directory does not exist: $dir" >&2
@@ -152,6 +156,9 @@ echo "Reference directory: $REFERENCE_DIR"
 for dir in "${TARGET_DIRS[@]}"; do
     echo "Target directory:    $dir"
 done
+if [[ -d "$REFERENCE_WIN64_DIR" ]]; then
+    echo "Reference x64 dir:   $REFERENCE_WIN64_DIR"
+fi
 echo
 
 for target_dir in "${TARGET_DIRS[@]}"; do
@@ -190,52 +197,77 @@ for target_dir in "${TARGET_DIRS[@]}"; do
     echo
 done
 
+if [[ "$CHECK_ONLY" -eq 1 ]]; then
+    if [[ ${#changed_pairs[@]} -eq 0 ]]; then
+        echo "No .so updates detected."
+    else
+        echo "Detected updates:"
+        for pair in "${changed_pairs[@]}"; do
+            IFS='|' read -r target_dir lib <<<"$pair"
+            echo "  - $target_dir : $lib"
+        done
+    fi
+    exit 0
+fi
+
 if [[ ${#changed_pairs[@]} -eq 0 ]]; then
     echo "No .so updates detected."
-    exit 0
+else
+    echo "Detected updates:"
+    for pair in "${changed_pairs[@]}"; do
+        IFS='|' read -r target_dir lib <<<"$pair"
+        echo "  - $target_dir : $lib"
+    done
+
+    for lib in "${!CHANGED_LIBS[@]}"; do
+        if [[ -z "${LIB_VERSIONS[$lib]:-}" ]]; then
+            echo "Missing explicit version: --set-version ${lib}=<version>" >&2
+            exit 1
+        fi
+    done
+
+    echo
+    echo "Applying Linux .so update"
+
+    for pair in "${changed_pairs[@]}"; do
+        IFS='|' read -r target_dir lib <<<"$pair"
+        ref_real="$(resolve_real_file "$REFERENCE_DIR/$lib")"
+        version="${LIB_VERSIONS[$lib]}"
+        dst_versioned="$target_dir/$lib.$version"
+        dst_link="$target_dir/$lib"
+
+        cp -pf "$ref_real" "$dst_versioned"
+        ln -sfn "$(basename "$dst_versioned")" "$dst_link"
+
+        while IFS= read -r old_file; do
+            [[ -z "$old_file" ]] && continue
+            [[ "$(basename "$old_file")" == "$(basename "$dst_versioned")" ]] && continue
+            rm -f "$old_file"
+            echo "[DEL ] $target_dir : $(basename "$old_file")"
+        done < <(find "$target_dir" -maxdepth 1 -type f -name "$lib.*" | sort)
+
+        echo "[DONE] $target_dir : $lib"
+        echo "       copied to $(basename "$dst_versioned")"
+        echo "       linked  $(basename "$dst_link") -> $(basename "$dst_versioned")"
+    done
 fi
 
-echo "Detected updates:"
-for pair in "${changed_pairs[@]}"; do
-    IFS='|' read -r target_dir lib <<<"$pair"
-    echo "  - $target_dir : $lib"
-done
+if [[ -d "$REFERENCE_WIN64_DIR" ]]; then
+    echo
+    echo "Applying x64 -> win64 copy"
 
-if [[ "$CHECK_ONLY" -eq 1 ]]; then
-    exit 0
+    for target_dir in "${TARGET_DIRS[@]}"; do
+        target_sdk_dir="$(dirname "$target_dir")"
+        target_win64_dir="$target_sdk_dir/win64"
+        mkdir -p "$target_win64_dir"
+        cp -a "$REFERENCE_WIN64_DIR"/. "$target_win64_dir"/
+        echo "[DONE] $REFERENCE_WIN64_DIR -> $target_win64_dir"
+    done
+else
+    echo
+    echo "Reference x64 directory not found, skipping win64 copy: $REFERENCE_WIN64_DIR"
 fi
 
-for lib in "${!CHANGED_LIBS[@]}"; do
-    if [[ -z "${LIB_VERSIONS[$lib]:-}" ]]; then
-        echo "Missing explicit version: --set-version ${lib}=<version>" >&2
-        exit 1
-    fi
-done
-
 echo
-echo "Applying update"
-
-for pair in "${changed_pairs[@]}"; do
-    IFS='|' read -r target_dir lib <<<"$pair"
-    ref_real="$(resolve_real_file "$REFERENCE_DIR/$lib")"
-    version="${LIB_VERSIONS[$lib]}"
-    dst_versioned="$target_dir/$lib.$version"
-    dst_link="$target_dir/$lib"
-
-    cp -pf "$ref_real" "$dst_versioned"
-    ln -sfn "$(basename "$dst_versioned")" "$dst_link"
-
-    while IFS= read -r old_file; do
-        [[ -z "$old_file" ]] && continue
-        [[ "$(basename "$old_file")" == "$(basename "$dst_versioned")" ]] && continue
-        rm -f "$old_file"
-        echo "[DEL ] $target_dir : $(basename "$old_file")"
-    done < <(find "$target_dir" -maxdepth 1 -type f -name "$lib.*" | sort)
-
-    echo "[DONE] $target_dir : $lib"
-    echo "       copied to $(basename "$dst_versioned")"
-    echo "       linked  $(basename "$dst_link") -> $(basename "$dst_versioned")"
-done
-
-echo
-echo "SDK .so update completed."
+echo "SDK sync completed."
+exit 0
