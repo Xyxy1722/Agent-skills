@@ -1,0 +1,4 @@
+interface:
+  display_name: "Andrej Karpathy Skills"
+  short_description: "Surgical coding-agent discipline"
+  default_prompt: "Use $andrej-karpathy-skills to keep a coding change simple, surgical, assumption-aware, and verified."
